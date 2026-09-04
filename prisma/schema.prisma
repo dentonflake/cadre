@@ -1,0 +1,18 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Employee {
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
+  firstName    String
+  lastName     String
+  supervisorId Int?
+  supervisor   Employee?  @relation("EmployeeSupervisor", fields: [supervisorId], references: [id])
+  reports      Employee[] @relation("EmployeeSupervisor")
+}
