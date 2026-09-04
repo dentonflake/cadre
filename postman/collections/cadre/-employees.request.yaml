@@ -1,0 +1,5 @@
+$kind: http-request
+name: /employees
+url: "{{baseURL}}/employees"
+method: GET
+order: 1788537893252

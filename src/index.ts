@@ -1,12 +1,9 @@
 import { Hono } from "hono"
 import { prisma } from "./lib/prisma"
+import employees from "./routes/employees"
 
 const app = new Hono()
 
-app.get("/", (c) => c.text("Cadre"))
-
-app.get("/employees", async (c) => {
-  return c.json(await prisma.employee.findMany())
-})
+app.route('/employees', employees)
 
 export default app

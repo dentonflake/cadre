@@ -1,0 +1,9 @@
+$kind: http-request
+name: /employees/:id
+url: "{{baseURL}}/employees/:id"
+method: DELETE
+pathVariables:
+  - key: id
+    value: "1"
+    description: ""
+order: 4089143063584832
