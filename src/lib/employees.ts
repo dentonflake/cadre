@@ -2,7 +2,6 @@ import { z } from 'zod'
 import type { Context } from 'hono'
 import { prisma } from '../lib/prisma'
 import { Prisma } from '../generated/prisma/client'
-import type { Employee } from '../generated/prisma/client'
 import tryCatch from '../utils/try-catch'
 
 type ValidationResult<T> =
@@ -67,57 +66,4 @@ export const supervisorNotFound = async (c: Context, supervisorId: number) => {
     data: null,
     error: `Unable to find a supervisor with an ID of ${supervisorId}.`,
   }, 422)
-}
-
-export type EmployeeNode = Employee & { reports: EmployeeNode[] }
-
-// Indexes every employee under their supervisor so the tree can be built without more queries
-export const groupBySupervisorId = (employees: Employee[]) => {
-
-  const reportsBySupervisorId = new Map<number, Employee[]>()
-
-  for (const employee of employees) {
-
-    if (employee.supervisorId === null) continue
-
-    const reports = reportsBySupervisorId.get(employee.supervisorId) ?? []
-
-    reports.push(employee)
-    
-    reportsBySupervisorId.set(employee.supervisorId, reports)
-  }
-
-  console.log(`Indexed ${employees.length} employees under ${reportsBySupervisorId.size} supervisors`)
-
-  return reportsBySupervisorId
-}
-
-const byName = (a: Employee, b: Employee) => (
-  a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName)
-)
-
-// Recursively attaches each employee's reports, walking the whole subtree below them
-export const buildReportTree = (employee: Employee, reportsBySupervisorId: Map<number, Employee[]>, visited = new Set<number>(), depth = 0): EmployeeNode => {
-
-  // Indenting by depth makes each level of the recursion visible in the terminal
-  const indent = '  '.repeat(depth)
-
-  // A supervisor cycle would otherwise recurse until the stack overflows
-  if (visited.has(employee.id)) {
-
-    console.log(`${indent}Cycle detected at employee ${employee.id}, stopping this branch`)
-
-    return { ...employee, reports: [] }
-  }
-
-  visited.add(employee.id)
-
-  const directReports = [...(reportsBySupervisorId.get(employee.id) ?? [])].sort(byName)
-
-  console.log(`${indent}${employee.firstName} ${employee.lastName} (${directReports.length} direct reports)`)
-
-  const reports = directReports
-    .map((report) => buildReportTree(report, reportsBySupervisorId, visited, depth + 1))
-
-  return { ...employee, reports }
 }

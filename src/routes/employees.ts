@@ -4,15 +4,15 @@ import tryCatch from '../utils/try-catch'
 import { zValidator } from '@hono/zod-validator'
 
 import {
-  buildReportTree,
   CreateEmployeeSchema,
   EmployeeIdParamSchema,
-  groupBySupervisorId,
   isPrismaError,
   onValidationError,
   PatchEmployeeSchema,
   supervisorNotFound
 } from '../lib/employees'
+
+import { OrgChart } from '../lib/org-chart'
 
 
 const routeEmployees = new Hono()
@@ -89,10 +89,10 @@ routeEmployees.get('/:id/tree', zValidator('param', EmployeeIdParamSchema, onVal
 
   console.log(`Loaded ${employees.length} employees to build the tree from`)
 
-  const root = employees.find((employee) => employee.id === id)
+  const tree = new OrgChart(employees).treeFor(id)
 
   // If there is no employee, return early
-  if (root === undefined) {
+  if (tree === null) {
 
     console.log(`GET /employees/${id}/tree -> 404, no employee with that ID`)
 
@@ -102,9 +102,7 @@ routeEmployees.get('/:id/tree', zValidator('param', EmployeeIdParamSchema, onVal
     }, 404)
   }
 
-  const tree = buildReportTree(root, groupBySupervisorId(employees))
-
-  console.log(`GET /employees/${id}/tree -> 200, root ${root.firstName} ${root.lastName} has ${tree.reports.length} direct reports`)
+  console.log(`GET /employees/${id}/tree -> 200, root ${tree.firstName} ${tree.lastName} has ${tree.reports.length} direct reports`)
 
   // Return the employee with their reports nested beneath them
   return c.json({

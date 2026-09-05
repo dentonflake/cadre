@@ -5,8 +5,9 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/src/index.js",
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "build": "tsc --noEmit",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
@@ -14,6 +15,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@hono/node-server": "^2.1.1",
     "@hono/zod-validator": "^0.9.1",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
@@ -24,6 +26,7 @@
   "devDependencies": {
     "@types/node": "^26.0.0",
     "prisma": "^7.8.0",
+    "tsx": "^4.23.13",
     "typescript": "^6.0.3",
     "vercel": "^59.11.2"
   }
