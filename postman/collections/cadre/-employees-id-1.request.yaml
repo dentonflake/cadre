@@ -1,9 +1,16 @@
 $kind: http-request
 name: /employees/:id
-url: "{{baseURL}}/employees/:id"
+url: "{{baseURL}}/employees/:id/dsadsa"
 method: PATCH
 pathVariables:
-  - key: id
-    value: "1"
-    description: ""
+  id: "5"
+body:
+  type: json
+  content: |-
+    {
+        "email": "me@dentonflake.com",
+        "firstName": "Denton",
+        "lastName": "Flake",
+        "supervisorId": null
+    }
 order: 4039654433838155

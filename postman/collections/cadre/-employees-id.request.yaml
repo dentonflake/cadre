@@ -4,6 +4,6 @@ url: "{{baseURL}}/employees/:id"
 method: GET
 pathVariables:
   - key: id
-    value: "1"
+    value: "3"
     description: ""
 order: 2908522100445048

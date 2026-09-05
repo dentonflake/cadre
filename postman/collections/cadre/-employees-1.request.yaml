@@ -2,4 +2,13 @@ $kind: http-request
 name: /employees
 url: "{{baseURL}}/employees"
 method: POST
+body:
+  type: json
+  content: |-
+    {
+        "email": "inbox@sallymiller.com",
+        "firstName": "Sally",
+        "lastName": "Miller",
+        "supervisorId": 1
+    }
 order: 3518560905056001
