@@ -1,11 +1,11 @@
 import { Hono } from "hono"
-import employees from "./routes/employees"
+import routeEmployees from "./routes/employees"
 import { HTTPException } from "hono/http-exception"
 
 const app = new Hono()
 
 // Employee routes
-app.route('/employees', employees)
+app.route('/employees', routeEmployees)
 
 // Error handler
 app.onError((error, c) => {

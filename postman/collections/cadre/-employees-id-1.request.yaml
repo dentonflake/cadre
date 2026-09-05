@@ -1,6 +1,6 @@
 $kind: http-request
 name: /employees/:id
-url: "{{baseURL}}/employees/:id/dsadsa"
+url: "{{baseURL}}/employees/:id"
 method: PATCH
 pathVariables:
   id: "5"

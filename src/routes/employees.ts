@@ -1,14 +1,22 @@
 import { Hono } from 'hono'
 import { prisma } from '../lib/prisma'
+import tryCatch from '../utils/try-catch'
 import { zValidator } from '@hono/zod-validator'
-import { CreateEmployeeSchema, EmployeeIdParamSchema, PatchEmployeeSchema } from '../lib/employees'
-import tryCatch from '../../utils/try-catch'
-import { Prisma } from '../generated/prisma/client'
 
-const employees = new Hono()
+import {
+  CreateEmployeeSchema,
+  EmployeeIdParamSchema,
+  isPrismaError,
+  onValidationError,
+  PatchEmployeeSchema,
+  supervisorNotFound
+} from '../lib/employees'
+
+
+const routeEmployees = new Hono()
 
 // Get all employees
-employees.get('/', async (c) => {
+routeEmployees.get('/', async (c) => {
 
   // Fetch all employees
   const [employees, error] = await tryCatch(prisma.employee.findMany())
@@ -24,22 +32,22 @@ employees.get('/', async (c) => {
 })
 
 // Get unique employee
-employees.get('/:id', zValidator('param', EmployeeIdParamSchema), async (c) => {
+routeEmployees.get('/:id', zValidator('param', EmployeeIdParamSchema, onValidationError), async (c) => {
 
   // Query parameter
   const { id } = c.req.valid('param')
 
   // Fetch the employee
   const [employee, error] = await tryCatch(prisma.employee.findUnique({
-    where: { id }
+    where: { id },
   }))
-  
+
   // Unhandled errors
   if (error) throw error
 
   // If there is no employee, return early
   if (employee === null) return c.json({
-    data: employee,
+    data: null,
     error: `Unable to find an employee with an ID of ${id}.`,
   }, 404)
 
@@ -51,37 +59,33 @@ employees.get('/:id', zValidator('param', EmployeeIdParamSchema), async (c) => {
 })
 
 // Create employee
-employees.post('/', zValidator('json', CreateEmployeeSchema), async (c) => {
+routeEmployees.post('/', zValidator('json', CreateEmployeeSchema, onValidationError), async (c) => {
 
   // Request body
   const data = c.req.valid('json')
 
-  // If supervisorId was provided
+  // If supervisorId was provided, the supervisor has to exist
   if (data.supervisorId !== undefined && data.supervisorId !== null) {
-
-    // Fetch the supervisor
-    const supervisor = await prisma.employee.findUnique({
-      select: { id: true },
-      where: { id: data.supervisorId },
-    })
-
-    // If there is no supervisor, return early
-    if (!supervisor) return c.json({
-      data: supervisor,
-      error: `Unable to find a supervisor with an ID of ${data.supervisorId}.`,
-    }, 422)
+    const notFound = await supervisorNotFound(c, data.supervisorId)
+    if (notFound) return notFound
   }
 
-  // Create the emplyee
+  // Create the employee
   const [employee, error] = await tryCatch(prisma.employee.create({
-    data
+    data,
   }))
 
   // If an employee with the provided email already exists
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') return c.json({
-    data: employee,
+  if (isPrismaError(error, 'P2002')) return c.json({
+    data: null,
     error: 'An employee with the provided email already exists.',
   }, 409)
+
+  // Covers the supervisor being deleted between the check above and this write
+  if (isPrismaError(error, 'P2003')) return c.json({
+    data: null,
+    error: `Unable to find a supervisor with an ID of ${data.supervisorId}.`,
+  }, 422)
 
   // Unhandled errors
   if (error) throw error
@@ -89,71 +93,91 @@ employees.post('/', zValidator('json', CreateEmployeeSchema), async (c) => {
   // Return the created employee
   return c.json({
     data: employee,
-    error: null
+    error: null,
   }, 201)
 })
 
 // Update employee
-employees.patch('/:id', zValidator('param', EmployeeIdParamSchema), zValidator('json', PatchEmployeeSchema), async (c) => {
+routeEmployees.patch('/:id', zValidator('param', EmployeeIdParamSchema, onValidationError), zValidator('json', PatchEmployeeSchema, onValidationError), async (c) => {
+
+    // Query parameter
+    const { id } = c.req.valid('param')
+
+    // Request body
+    const data = c.req.valid('json')
+
+    // An employee cannot supervise themselves
+    if (data.supervisorId === id) return c.json({
+      data: null,
+      error: 'The provided supervisor ID cannot be the same as the provided employee\'s ID.',
+    }, 422)
+
+    // If supervisorId was provided, the supervisor has to exist
+    if (data.supervisorId !== undefined && data.supervisorId !== null) {
+      const notFound = await supervisorNotFound(c, data.supervisorId)
+      if (notFound) return notFound
+    }
+
+    // Update employee
+    const [employee, error] = await tryCatch(prisma.employee.update({
+      where: { id },
+      data,
+    }))
+
+    // If an employee with the provided ID doesnt exists
+    if (isPrismaError(error, 'P2025')) return c.json({
+      data: null,
+      error: `Unable to find an employee with an ID of ${id}.`,
+    }, 404)
+
+    // If an employee with the provided email already exists
+    if (isPrismaError(error, 'P2002')) return c.json({
+      data: null,
+      error: 'An employee with the provided email already exists.',
+    }, 409)
+
+    // Covers the supervisor being deleted between the check above and this write
+    if (isPrismaError(error, 'P2003')) return c.json({
+      data: null,
+      error: `Unable to find a supervisor with an ID of ${data.supervisorId}.`,
+    }, 422)
+
+    // Unhandled errors
+    if (error) throw error
+
+    // Return the updated employee
+    return c.json({
+      data: employee,
+      error: null,
+    })
+  },
+)
+
+// Delete employee
+routeEmployees.delete('/:id', zValidator('param', EmployeeIdParamSchema, onValidationError), async (c) => {
 
   // Query parameter
   const { id } = c.req.valid('param')
 
-  // Request body
-  const data = c.req.valid('json')
-
-  // If supervisorId was provided
-  if (data.supervisorId !== undefined && data.supervisorId !== null) {
-
-    // Fetch the supervisor
-    const supervisor = await prisma.employee.findUnique({
-      select: { id: true },
-      where: { id: data.supervisorId },
-    })
-
-    // If there is no supervisor, return early
-    if (!supervisor) return c.json({
-      data: supervisor,
-      error: `Unable to find a supervisor with an ID of ${data.supervisorId}.`,
-    }, 422)
-  }
-
-  if (data.supervisorId === id) return c.json({
-    data: null,
-    error: 'The provided supervisor ID cannot be the same as the provided employee\'s ID.',
-  })
-
-  // Update employee
-  const [employee, error] = await tryCatch(prisma.employee.update({
+  // Delete the employee, which nulls out supervisorId on any of their reports
+  const [employee, error] = await tryCatch(prisma.employee.delete({
     where: { id },
-    data
   }))
 
   // If an employee with the provided ID doesnt exists
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') return c.json({
+  if (isPrismaError(error, 'P2025')) return c.json({
     data: null,
     error: `Unable to find an employee with an ID of ${id}.`,
   }, 404)
 
-  // If an employee with the provided email already exists
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') return c.json({
-    data: employee,
-    error: 'An employee with the provided email already exists.',
-  }, 409)
-
   // Unhandled errors
   if (error) throw error
 
-  // Return the updated employee
+  // Return the deleted employee
   return c.json({
     data: employee,
     error: null,
   })
 })
 
-// Delete employee
-employees.delete('/:id', zValidator('param', EmployeeIdParamSchema), async (c) => {
-  
-})
-
-export default employees
+export default routeEmployees
