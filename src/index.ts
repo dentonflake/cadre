@@ -11,11 +11,17 @@ app.route('/employees', routeEmployees)
 app.onError((error, c) => {
 
   // Hono's own HTTP errors already carry a status
-  if (error instanceof HTTPException) return c.json({
-    data: null,
-    error: error.message
-  }, error.status)
+  if (error instanceof HTTPException) {
 
+    console.log(`HTTP error -> ${error.status}: ${error.message}`)
+
+    return c.json({
+      data: null,
+      error: error.message
+    }, error.status)
+  }
+
+  console.log(`Unhandled error on ${c.req.method} ${c.req.path} -> 500`)
   console.error(error)
 
   return c.json({
@@ -25,9 +31,14 @@ app.onError((error, c) => {
 })
 
 // Not found handler
-app.notFound((c) => c.json({
-  data: null,
-  error: "Not found"
-}, 404))
+app.notFound((c) => {
+
+  console.log(`No route matches ${c.req.method} ${c.req.path} -> 404`)
+
+  return c.json({
+    data: null,
+    error: "Not found"
+  }, 404)
+})
 
 export default app

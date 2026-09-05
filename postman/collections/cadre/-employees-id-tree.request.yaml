@@ -1,0 +1,9 @@
+$kind: http-request
+name: /employees/:id/tree
+url: "{{baseURL}}/employees/:id/tree"
+method: GET
+pathVariables:
+  - key: id
+    value: "2"
+    description: ""
+order: 3491044313476805
