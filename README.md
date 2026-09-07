@@ -1,32 +1,29 @@
 # Overview
 
-{Important! Do not say in this section that this is college assignment. Talk about what you are trying to accomplish as a software engineer to further your learning.}
+Cadre is a REST API for managing employees and the reporting hierarchy between them.
 
-{Provide a description of the software that you wrote to demonstrate the TypeScript language.}
-
-{Describe your purpose for writing this software.}
-
-{Provide a link to your YouTube demonstration. It should be a 4-5 minute demo of the software running and a walkthrough of the code. Focus should be on sharing what you learned about the language syntax.}
+I wanted to learn TypeScript's type system on a problem where types actually earn their keep.
 
 [Software Demo Video](http://youtube.link.goes.here)
 
 # Development Environment
 
-{Describe the tools that you used to develop the software}
-
-{Describe the programming language that you used and any libraries.}
+- **Editor:** VS Code
+- **Runtime:** Node.js 24.11.1, pnpm 11.8.0
+- **Language:** TypeScript 6.0 in strict mode, run directly via tsx (no compile step)
+- **Libraries:** Hono 4.12 (HTTP framework), Zod 4.5 (runtime validation), Prisma 7.8 + @prisma/adapter-pg (PostgreSQL ORM), @hono/node-server, dotenv
+- **API testing:** Postman — the collection is committed under postman/
 
 # Useful Websites
 
-{Make a list of websites that you found helpful in this project}
-
-- [Web Site Name](http://url.link.goes.here)
-- [Web Site Name](http://url.link.goes.here)
+- [Hono documentation](https://hono.dev/docs)
+- [Prisma documentation](https://www.prisma.io/docs)
+- [Zod documentation](https://zod.dev/)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
+- [Prisma error reference](https://www.prisma.io/docs/orm/reference/error-reference)
 
 # Future Work
 
-{Make a list of things that you need to fix, improve, and add in the future.}
-
-- Item 1
-- Item 2
-- Item 3
+- Add authentication to every endpoint. Currently, there is none.
+- `PATCH` blocks an employee supervising themselves, but not A→B→A. The tree walk survives it via a `visited` set, but the bad data can still be written.
+- I Would add pagination to `GET /employees`. It is an unbounded `findMany()`. 
