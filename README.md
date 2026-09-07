@@ -4,7 +4,7 @@ Cadre is a REST API for managing employees and the reporting hierarchy between t
 
 I wanted to learn TypeScript's type system on a problem where types actually earn their keep.
 
-[Software Demo Video](http://youtube.link.goes.here)
+[Software Demo Video](youtube.com/watch?v=DtPJFNzwW-M&feature=youtu.be)
 
 # Development Environment
 
