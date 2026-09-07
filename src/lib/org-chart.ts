@@ -43,16 +43,6 @@ export class OrgChart {
     // Indenting by depth makes each level of the recursion visible in the terminal
     const indent = '  '.repeat(depth)
 
-    // A supervisor cycle would otherwise recurse until the stack overflows
-    if (visited.has(employee.id)) {
-
-      console.log(`${indent}Cycle detected at employee ${employee.id}, stopping this branch`)
-
-      return { ...employee, reports: [] }
-    }
-
-    visited.add(employee.id)
-
     const directReports = [...(this.reportsBySupervisorId.get(employee.id) ?? [])].sort((a, b) => (
       a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName)
     ))

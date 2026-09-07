@@ -6,9 +6,9 @@ body:
   type: json
   content: |-
     {
-        "email": "inbox@sallymiller.com",
-        "firstName": "Sally",
-        "lastName": "Miller",
+        "email": "mary.warren@cadre.example",
+        "firstName": "Mary",
+        "lastName": "Warren",
         "supervisorId": 1
     }
 order: 3518560905056001

@@ -3,7 +3,7 @@ name: /employees/:id
 url: "{{baseURL}}/employees/:id"
 method: PATCH
 pathVariables:
-  id: "5"
+  id: "1"
 body:
   type: json
   content: |-
