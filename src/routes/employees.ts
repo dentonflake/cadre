@@ -14,7 +14,6 @@ import {
 
 import { OrgChart } from '../lib/org-chart'
 
-
 const routeEmployees = new Hono()
 
 // Get all employees
